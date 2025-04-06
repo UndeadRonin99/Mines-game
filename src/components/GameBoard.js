@@ -2,6 +2,10 @@ import React from 'react';
 import './GameBoard.css';
 
 const GameBoard = ({ gameBoard, onTileClick }) => {
+  if (!gameBoard || gameBoard.length === 0) {
+    return <div className="game-board">Loading board...</div>;
+  }
+
   return (
     <div className="game-board">
       {gameBoard.map((row, rowIndex) => (
