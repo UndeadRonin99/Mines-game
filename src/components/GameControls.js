@@ -1,9 +1,10 @@
 import React from 'react';
 import './GameControls.css';
 
-const GameControls = ({
+function GameControls({
   gameState,
-  onNewGame,
+  onBuyInAndStart,
+  onNewGameNoBet,
   onCashOut,
   betAmount,
   onBetChange,
@@ -11,19 +12,16 @@ const GameControls = ({
   onDifficultyChange,
   gridSize,
   onGridSizeChange
-}) => {
-  // Available grid sizes
+}) {
   const gridSizes = [3, 4, 5, 6, 7, 8];
-  
-  // Dynamic mine count options based on grid size
-  const maxMines = Math.floor((gridSize * gridSize) * 0.4); // Max 40% of tiles can be mines
+  const maxMines = Math.floor((gridSize * gridSize) * 0.4);
   const mineOptions = Array.from({ length: maxMines }, (_, i) => i + 1);
-  
+
   return (
     <div className="game-controls">
       <div className="control-section">
         <h3>Game Settings</h3>
-        
+
         <div className="control-group">
           <label htmlFor="grid-size">Grid Size:</label>
           <select
@@ -32,14 +30,14 @@ const GameControls = ({
             onChange={(e) => onGridSizeChange(Number(e.target.value))}
             disabled={gameState === 'playing'}
           >
-            {gridSizes.map((size) => (
+            {gridSizes.map(size => (
               <option key={size} value={size}>
                 {size}x{size}
               </option>
             ))}
           </select>
         </div>
-        
+
         <div className="control-group">
           <label htmlFor="mine-count">Number of Mines:</label>
           <select
@@ -48,16 +46,16 @@ const GameControls = ({
             onChange={(e) => onDifficultyChange(Number(e.target.value))}
             disabled={gameState === 'playing'}
           >
-            {mineOptions.map((mines) => (
+            {mineOptions.map(mines => (
               <option key={mines} value={mines}>
                 {mines} {mines === 1 ? 'Mine' : 'Mines'}
               </option>
             ))}
           </select>
         </div>
-        
+
         <div className="control-group">
-          <label htmlFor="bet-amount">Bet Amount:</label>
+          <label htmlFor="bet-amount">Bet Amount (BDAG):</label>
           <input
             type="number"
             id="bet-amount"
@@ -69,15 +67,24 @@ const GameControls = ({
           />
         </div>
       </div>
-      
+
       <div className="action-buttons">
         <button
           className="btn new-game"
-          onClick={onNewGame}
+          onClick={onBuyInAndStart}
+          disabled={betAmount <= 0 || gameState === 'playing'}
         >
-          New Game
+          Buy In & Start Round
         </button>
-        
+
+        <button
+          className="btn new-game"
+          onClick={onNewGameNoBet}
+          disabled={gameState === 'playing'}
+        >
+          New Game (No Bet)
+        </button>
+
         <button
           className="btn cash-out"
           onClick={onCashOut}
@@ -86,7 +93,7 @@ const GameControls = ({
           Cash Out
         </button>
       </div>
-      
+
       <div className="difficulty-info">
         <p>
           <strong>Difficulty:</strong> {mineCount} mine{mineCount !== 1 ? 's' : ''} in a {gridSize}x{gridSize} grid
@@ -97,6 +104,6 @@ const GameControls = ({
       </div>
     </div>
   );
-};
+}
 
 export default GameControls;

@@ -1,13 +1,13 @@
 import React from 'react';
 import './GameStats.css';
 
-const GameStats = ({
+function GameStats({
   gameState,
   multiplier,
   betAmount,
   potentialWin,
   gameHash
-}) => {
+}) {
   return (
     <div className="game-stats">
       <div className="stats-row">
@@ -15,18 +15,18 @@ const GameStats = ({
           <div className="stat-label">Bet Amount</div>
           <div className="stat-value">{betAmount.toFixed(2)}</div>
         </div>
-        
+
         <div className="stat-box">
           <div className="stat-label">Multiplier</div>
           <div className="stat-value multiplier">{multiplier.toFixed(2)}x</div>
         </div>
-        
+
         <div className="stat-box">
           <div className="stat-label">Potential Win</div>
           <div className="stat-value potential-win">{potentialWin.toFixed(2)}</div>
         </div>
       </div>
-      
+
       <div className="game-status">
         {gameState === 'waiting' && <p>Select your bet and click a tile to start</p>}
         {gameState === 'playing' && <p>Game in progress - find the gems!</p>}
@@ -41,7 +41,7 @@ const GameStats = ({
           </p>
         )}
       </div>
-      
+
       <div className="provably-fair">
         <details>
           <summary>Provably Fair Information</summary>
@@ -56,6 +56,6 @@ const GameStats = ({
       </div>
     </div>
   );
-};
+}
 
 export default GameStats;
