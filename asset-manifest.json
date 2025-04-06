@@ -1,0 +1,15 @@
+{
+  "files": {
+    "main.css": "/Mines-game/static/css/main.0bc20a76.css",
+    "main.js": "/Mines-game/static/js/main.d21adb67.js",
+    "static/js/488.bc55b909.chunk.js": "/Mines-game/static/js/488.bc55b909.chunk.js",
+    "index.html": "/Mines-game/index.html",
+    "main.0bc20a76.css.map": "/Mines-game/static/css/main.0bc20a76.css.map",
+    "main.d21adb67.js.map": "/Mines-game/static/js/main.d21adb67.js.map",
+    "488.bc55b909.chunk.js.map": "/Mines-game/static/js/488.bc55b909.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.0bc20a76.css",
+    "static/js/main.d21adb67.js"
+  ]
+}
