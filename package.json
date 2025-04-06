@@ -2,7 +2,7 @@
   "name": "my-mines-dapp",
   "version": "0.1.0",
   "private": true,
-  "homepage": "https://UndeadRonin99.github.io/mines-game",
+  "homepage": "https://UndeadRonin99.github.io/Mines-game",
   "dependencies": {
     "ethers": "^5.8.0",
     "react": "^18.2.0",
