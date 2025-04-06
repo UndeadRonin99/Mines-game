@@ -115,7 +115,7 @@ function App() {
       return false;
     }
     try {
-      setActionInProgress(true);
+      //setActionInProgress(true);
       const provider = new ethers.providers.Web3Provider(window.ethereum);
       const signer = provider.getSigner();
 
@@ -135,7 +135,7 @@ function App() {
       showNotification(`Error sending entry fee: ${err.message}`, 'error');
       return false;
     } finally {
-      setActionInProgress(false);
+      //setActionInProgress(false);
     }
   }
 
