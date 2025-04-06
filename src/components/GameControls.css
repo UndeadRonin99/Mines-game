@@ -1,0 +1,123 @@
+/* GameControls.css - Game controls styles */
+.game-controls {
+    grid-area: controls;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding: 20px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
+  }
+  
+  .control-section {
+    margin-bottom: 20px;
+  }
+  
+  .control-section h3 {
+    color: #2c3e50;
+    margin-top: 0;
+    margin-bottom: 15px;
+    font-size: 1.3rem;
+    border-bottom: 1px solid #ecf0f1;
+    padding-bottom: 8px;
+  }
+  
+  .control-group {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 15px;
+  }
+  
+  .control-group label {
+    font-weight: bold;
+    margin-bottom: 5px;
+    color: #34495e;
+    font-size: 0.95rem;
+  }
+  
+  .control-group select,
+  .control-group input {
+    padding: 8px 12px;
+    border-radius: 4px;
+    border: 1px solid #ced4da;
+    font-size: 1rem;
+    background-color: white;
+  }
+  
+  .control-group select:focus,
+  .control-group input:focus {
+    outline: none;
+    border-color: #3498db;
+    box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.25);
+  }
+  
+  .control-group input[type="number"] {
+    -moz-appearance: textfield;
+  }
+  
+  .control-group input[type="number"]::-webkit-outer-spin-button,
+  .control-group input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  
+  .action-buttons {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  
+  .btn {
+    padding: 12px 15px;
+    border: none;
+    border-radius: 4px;
+    font-weight: bold;
+    font-size: 1rem;
+    cursor: pointer;
+    flex: 1;
+    transition: all 0.2s ease;
+  }
+  
+  .btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+  
+  .btn.new-game {
+    background-color: #3498db;
+    color: white;
+  }
+  
+  .btn.new-game:hover:not(:disabled) {
+    background-color: #2980b9;
+  }
+  
+  .btn.cash-out {
+    background-color: #2ecc71;
+    color: white;
+  }
+  
+  .btn.cash-out:hover:not(:disabled) {
+    background-color: #27ae60;
+  }
+  
+  .difficulty-info {
+    background-color: #f1f3f5;
+    padding: 12px;
+    border-radius: 4px;
+    margin-top: auto;
+  }
+  
+  .difficulty-info p {
+    margin: 5px 0;
+    font-size: 0.9rem;
+    color: #495057;
+  }
+  
+  /* Responsive adjustments */
+  @media (max-width: 768px) {
+    .action-buttons {
+      flex-direction: column;
+    }
+  }

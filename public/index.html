@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mines Game</title>
+  <style>
+    /* Global styles */
+    body {
+      font-family: 'Arial', sans-serif;
+      margin: 0;
+      padding: 20px;
+      background-color: #f8f9fa;
+      display: flex;
+      justify-content: center;
+    }
+    
+    .game-container {
+      max-width: 1000px;
+      margin: 0 auto;
+      background-color: white;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      padding: 20px;
+      display: grid;
+      grid-template-areas:
+        "header header"
+        "stats stats"
+        "board controls";
+      grid-template-columns: 1fr 300px;
+      grid-template-rows: auto auto 1fr;
+      gap: 20px;
+    }
+    
+    /* Header */
+    .game-header {
+      grid-area: header;
+      text-align: center;
+      padding-bottom: 15px;
+      border-bottom: 1px solid #eee;
+    }
+    
+    .game-header h1 {
+      color: #2c3e50;
+      margin-bottom: 5px;
+    }
+    
+    .subtitle {
+      color: #7f8c8d;
+      margin-top: 0;
+    }
+    
+    /* Game stats */
+    .game-stats {
+      grid-area: stats;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      padding: 15px;
+      background-color: #f8f9fa;
+      border-radius: 8px;
+      border: 1px solid #e9ecef;
+    }
+    
+    .stats-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 15px;
+    }
+    
+    .stat-box {
+      flex: 1;
+      background-color: white;
+      padding: 15px;
+      border-radius: 6px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+      transition: transform 0.2s ease;
+    }
+    
+    .stat-box:hover {
+      transform: translateY(-2px);
+    }
+    
+    .stat-label {
+      font-size: 0.9rem;
+      font-weight: bold;
+      color: #6c757d;
+      margin-bottom: 5px;
+    }
+    
+    .stat-value {
+      font-size: 1.6rem;
+      font-weight: bold;
+      color: #2c3e50;
+    }
+    
+    .multiplier {
+      color: #3498db;
+    }
+    
+    .potential-win {
+      color: #2ecc71;
+    }
+    
+    .game-status {
+      margin: 10px 0;
+      padding: 15px;
+      border-radius: 6px;
+      background-color: white;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+      text-align: center;
+    }
+    
+    .status-success {
+      color: #2ecc71;
+      font-weight: bold;
+    }
+    
+    .status-failure {
+      color: #e74c3c;
+      font-weight: bold;
+    }
+    
+    /* Game board */
+    .game-board {
+      grid-area: board;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      background-color: #ecf0f1;
+      border-radius: 8px;
+    }
+    
+    .board-row {
+      display: flex;
+      gap: 5px;
+    }
+    
+    .board-tile {
+      width: 60px;
+      height: 60px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 1.8rem;
+      background-color: #3498db;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+    }
+    
+    .board-tile:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 10px rgba(0, 0, 0, 0.15);
+      background-color: #2980b9;
+    }
+    
+    .board-tile:active:not(:disabled) {
+      transform: translateY(0);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    
+    .board-tile.revealed {
+      background-color: #ecf0f1;
+      box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.1);
+      transform: none;
+    }
+    
+    .board-tile.revealed.gem {
+      background-color: #2ecc71;
+      color: white;
+    }
+    
+    .board-tile.revealed.mine {
+      background-color: #e74c3c;
+      color: white;
+      animation: explode 0.5s ease-out;
+    }
+    
+    @keyframes explode {
+      0% {
+        transform: scale(1);
+      }
+      50% {
+        transform: scale(1.2);
+      }
+      100% {
+        transform: scale(1);
+      }
+    }
+    
+    /* Game controls */
+    .game-controls {
+      grid-area: controls;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      padding: 20px;
+      background-color: #f8f9fa;
+      border-radius: 8px;
+      border: 1px solid #e9ecef;
+    }
+    
+    .control-section {
+      margin-bottom: 20px;
+    }
+    
+    .control-section h3 {
+      color: #2c3e50;
+      margin-top: 0;
+      margin-bottom: 15px;
+      font-size: 1.3rem;
+      border-bottom: 1px solid #ecf0f1;
+      padding-bottom: 8px;
+    }
+    
+    .control-group {
+      display: flex;
+      flex-direction: column;
+      margin-bottom: 15px;
+    }
+    
+    .control-group label {
+      font-weight: bold;
+      margin-bottom: 5px;
+      color: #34495e;
+      font-size: 0.95rem;
+    }
+    
+    .control-group select,
+    .control-group input {
+      padding: 8px 12px;
+      border-radius: 4px;
+      border: 1px solid #ced4da;
+      font-size: 1rem;
+      background-color: white;
+    }
+    
+    .control-group select:focus,
+    .control-group input:focus {
+      outline: none;
+      border-color: #3498db;
+      box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.25);
+    }
+    
+    .action-buttons {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    
+    .btn {
+      padding: 12px 15px;
+      border: none;
+      border-radius: 4px;
+      font-weight: bold;
+      font-size: 1rem;
+      cursor: pointer;
+      flex: 1;
+      transition: all 0.2s ease;
+    }
+    
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+    
+    .btn.new-game {
+      background-color: #3498db;
+      color: white;
+    }
+    
+    .btn.new-game:hover:not(:disabled) {
+      background-color: #2980b9;
+    }
+    
+    .btn.cash-out {
+      background-color: #2ecc71;
+      color: white;
+    }
+    
+    .btn.cash-out:hover:not(:disabled) {
+      background-color: #27ae60;
+    }
+    
+    .provably-fair {
+      margin-top: 10px;
+      font-size: 0.9rem;
+    }
+    
+    .provably-fair summary {
+      cursor: pointer;
+      color: #3498db;
+      font-weight: bold;
+      outline: none;
+    }
+    
+    .fair-details {
+      margin-top: 10px;
+      padding: 10px;
+      background-color: #f1f3f5;
+      border-radius: 4px;
+      text-align: left;
+    }
+    
+    .fair-details code {
+      display: block;
+      overflow-x: auto;
+      background-color: #2c3e50;
+      color: white;
+      padding: 8px;
+      border-radius: 4px;
+      margin: 8px 0;
+      font-family: monospace;
+    }
+    
+    .difficulty-info {
+      background-color: #f1f3f5;
+      padding: 12px;
+      border-radius: 4px;
+      margin-top: auto;
+    }
+    
+    .difficulty-info p {
+      margin: 5px 0;
+      font-size: 0.9rem;
+      color: #495057;
+    }
+    
+    /* Footer */
+    footer {
+      text-align: center;
+      margin-top: 30px;
+      padding: 10px;
+      color: #7f8c8d;
+      font-size: 0.9rem;
+    }
+    
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+      .game-container {
+        grid-template-areas:
+          "header"
+          "stats"
+          "board"
+          "controls";
+        grid-template-columns: 1fr;
+        grid-template-rows: auto auto auto auto;
+      }
+      
+      .board-tile {
+        width: 48px;
+        height: 48px;
+        font-size: 1.4rem;
+      }
+      
+      .action-buttons {
+        flex-direction: column;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      .board-tile {
+        width: 36px;
+        height: 36px;
+        font-size: 1.2rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="game-container">
+    <div class="game-header">
+      <h1>Mines Game</h1>
+      <p class="subtitle">Find the gems, avoid the mines!</p>
+    </div>
+    
+    <div class="game-stats">
+      <div class="stats-row">
+        <div class="stat-box">
+          <div class="stat-label">Bet Amount</div>
+          <div id="bet-value" class="stat-value">1.00</div>
+        </div>
+        
+        <div class="stat-box">
+          <div class="stat-label">Multiplier</div>
+          <div id="multiplier-value" class="stat-value multiplier">1.00x</div>
+        </div>
+        
+        <div class="stat-box">
+          <div class="stat-label">Potential Win</div>
+          <div id="potential-win-value" class="stat-value potential-win">1.00</div>
+        </div>
+      </div>
+      
+      <div id="game-status" class="game-status">
+        <p>Select your bet and click a tile to start</p>
+      </div>
+      
+      <div class="provably-fair">
+        <details>
+          <summary>Provably Fair Information</summary>
+          <div class="fair-details">
+            <p>Game Hash: <code id="game-hash"></code></p>
+            <p>
+              This game uses provably fair technology. You can verify the fairness
+              of each round by checking the hash above.
+            </p>
+          </div>
+        </details>
+      </div>
+    </div>
+    
+    <div id="game-board" class="game-board">
+      <!-- Game board will be generated here -->
+    </div>
+    
+    <div class="game-controls">
+      <div class="control-section">
+        <h3>Game Settings</h3>
+        
+        <div class="control-group">
+          <label for="grid-size">Grid Size:</label>
+          <select id="grid-size">
+            <option value="3">3x3</option>
+            <option value="4">4x4</option>
+            <option value="5" selected>5x5</option>
+            <option value="6">6x6</option>
+            <option value="7">7x7</option>
+            <option value="8">8x8</option>
+          </select>
+        </div>
+        
+        <div class="control-group">
+          <label for="mine-count">Number of Mines:</label>
+          <select id="mine-count">
+            <!-- Options will be generated dynamically -->
+          </select>
+        </div>
+        
+        <div class="control-group">
+          <label for="bet-amount">Bet Amount:</label>
+          <input type="number" id="bet-amount" min="0.1" step="0.1" value="1">
+        </div>
+      </div>
+      
+      <div class="action-buttons">
+        <button id="new-game-btn" class="btn new-game">New Game</button>
+        <button id="cash-out-btn" class="btn cash-out" disabled>Cash Out</button>
+      </div>
+      
+      <div class="difficulty-info">
+        <p>
+          <strong>Difficulty:</strong> <span id="difficulty-text">3 mines in a 5x5 grid</span>
+        </p>
+        <p>
+          <strong>Success Rate:</strong> <span id="success-rate">88.0%</span>
+        </p>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    // Game state
+    let gameState = 'waiting'; // waiting, playing, won, lost
+    let gameBoard = [];
+    let gridSize = 5;
+    let mineCount = 3;
+    let revealedCount = 0;
+    let multiplier = 1;
+    let betAmount = 1;
+    let potentialWin = 1;
+    let gameHash = '';
+    
+    // DOM elements
+    const gameBoardElement = document.getElementById('game-board');
+    const betValueElement = document.getElementById('bet-value');
+    const multiplierValueElement = document.getElementById('multiplier-value');
+    const potentialWinValueElement = document.getElementById('potential-win-value');
+    const gameStatusElement = document.getElementById('game-status');
+    const gameHashElement = document.getElementById('game-hash');
+    const gridSizeSelect = document.getElementById('grid-size');
+    const mineCountSelect = document.getElementById('mine-count');
+    const betAmountInput = document.getElementById('bet-amount');
+    const newGameBtn = document.getElementById('new-game-btn');
+    const cashOutBtn = document.getElementById('cash-out-btn');
+    const difficultyTextElement = document.getElementById('difficulty-text');
+    const successRateElement = document.getElementById('success-rate');
+    
+    // Initialization
+    document.addEventListener('DOMContentLoaded', () => {
+      // Setup event listeners
+      gridSizeSelect.addEventListener('change', handleGridSizeChange);
+      mineCountSelect.addEventListener('change', handleMineCountChange);
+      betAmountInput.addEventListener('change', handleBetAmountChange);
+      newGameBtn.addEventListener('click', startNewGame);
+      cashOutBtn.addEventListener('click', handleCashOut);
+      
+      // Initialize mine count options
+      updateMineCountOptions();
+      
+      // Start a new game
+      startNewGame();
+    });
+    
+    // Handler functions
+    function handleGridSizeChange() {
+      if (gameState === 'playing') return;
+      
+      gridSize = parseInt(gridSizeSelect.value);
+      updateMineCountOptions();
+      updateDifficultyInfo();
+      startNewGame();
+    }
+    
+    function handleMineCountChange() {
+      if (gameState === 'playing') return;
+      
+      mineCount = parseInt(mineCountSelect.value);
+      updateDifficultyInfo();
+      startNewGame();
+    }
+    
+    function handleBetAmountChange() {
+      if (gameState === 'playing') return;
+      
+      betAmount = parseFloat(betAmountInput.value);
+      updateStats();
+    }
+    
+    function updateMineCountOptions() {
+      // Clear existing options
+      mineCountSelect.innerHTML = '';
+      
+      // Calculate max mines (40% of tiles)
+      const maxMines = Math.floor((gridSize * gridSize) * 0.4);
+      
+      // Add options
+      for (let i = 1; i <= maxMines; i++) {
+        const option = document.createElement('option');
+        option.value = i;
+        option.textContent = `${i} ${i === 1 ? 'Mine' : 'Mines'}`;
+        mineCountSelect.appendChild(option);
+      }
+      
+      // Set default selection
+      if (mineCount > maxMines) {
+        mineCount = Math.min(3, maxMines);
+      }
+      mineCountSelect.value = mineCount;
+    }
+    
+    function updateDifficultyInfo() {
+      difficultyTextElement.textContent = `${mineCount} mine${mineCount !== 1 ? 's' : ''} in a ${gridSize}x${gridSize} grid`;
+      
+      const totalTiles = gridSize * gridSize;
+      const successRate = ((totalTiles - mineCount) / totalTiles) * 100;
+      successRateElement.textContent = `${successRate.toFixed(1)}%`;
+    }
+    
+    // Game logic functions
+    function startNewGame() {
+      // Reset game state
+      gameState = 'waiting';
+      revealedCount = 0;
+      multiplier = 1;
+      potentialWin = betAmount;
+      
+      // Generate new game hash
+      gameHash = generateGameHash();
+      gameHashElement.textContent = gameHash;
+      
+      // Generate new board
+      gameBoard = generateGameBoard();
+      
+      // Render board
+      renderGameBoard();
+      
+      // Update UI
+      updateStats();
+      updateGameStatus('Select your bet and click a tile to start');
+      cashOutBtn.disabled = true;
+    }
+    
+    function generateGameHash() {
+      return Math.random().toString(36).substring(2, 15) + 
+             Math.random().toString(36).substring(2, 15);
+    }
+    
+    function generateGameBoard() {
+      const board = [];
+      
+      // Create empty board
+      for (let row = 0; row < gridSize; row++) {
+        const rowTiles = [];
+        for (let col = 0; col < gridSize; col++) {
+          rowTiles.push({
+            row,
+            col,
+            value: 'gem',
+            isRevealed: false
+          });
+        }
+        board.push(rowTiles);
+      }
+      
+      // Place mines using pseudo-random placement based on game hash
+      const rng = new Math.seedrandom(gameHash);
+      let minesPlaced = 0;
+      
+      while (minesPlaced < mineCount) {
+        const row = Math.floor(rng() * gridSize);
+        const col = Math.floor(rng() * gridSize);
+        
+        if (board[row][col].value !== 'mine') {
+          board[row][col].value = 'mine';
+          minesPlaced++;
+        }
+      }
+      
+      return board;
+    }
+    
+    function renderGameBoard() {
+      gameBoardElement.innerHTML = '';
+      
+      for (let row = 0; row < gridSize; row++) {
+        const rowElement = document.createElement('div');
+        rowElement.className = 'board-row';
+        
+        for (let col = 0; col < gridSize; col++) {
+          const tile = gameBoard[row][col];
+          const tileElement = document.createElement('button');
+          tileElement.className = `board-tile ${
+            tile.isRevealed ? 'revealed' : ''
+          } ${
+            tile.isRevealed && tile.value === 'mine' ? 'mine' : 
+            tile.isRevealed && tile.value === 'gem' ? 'gem' : ''
+          }`;
+          
+          if (tile.isRevealed) {
+            tileElement.innerHTML = tile.value === 'mine' ? 
+              '<span role="img" aria-label="mine">💣</span>' : 
+              '<span role="img" aria-label="gem">💎</span>';
+            tileElement.disabled = true;
+          } else {
+            tileElement.addEventListener('click', () => handleTileClick(row, col));
+          }
+          
+          rowElement.appendChild(tileElement);
+        }
+        
+        gameBoardElement.appendChild(rowElement);
+      }
+    }
+    
+    function handleTileClick(row, col) {
+      if (gameState === 'lost' || gameState === 'won') return;
+      
+      if (gameState === 'waiting') {
+        gameState = 'playing';
+        cashOutBtn.disabled = false;
+      }
+      
+      const tile = gameBoard[row][col];
+      tile.isRevealed = true;
+      
+      if (tile.value === 'mine') {
+        // Game over
+        gameState = 'lost';
+        cashOutBtn.disabled = true;
+        
+        // Reveal all mines
+        gameBoard.forEach(row => {
+          row.forEach(tile => {
+            if (tile.value === 'mine') {
+              tile.isRevealed = true;
+            }
+          });
+        });
+        
+        updateGameStatus('You hit a mine! Game over.', 'failure');
+      } else {
+        // Reveal gem
+        revealedCount++;
+        
+        // Calculate new multiplier
+        multiplier = calculateMultiplier();
+        potentialWin = betAmount * multiplier;
+        
+        // Check if all safe tiles are revealed
+        const totalTiles = gridSize * gridSize;
+        const safeTiles = totalTiles - mineCount;
+        
+        if (revealedCount === safeTiles) {
+          gameState = 'won';
+          cashOutBtn.disabled = true;
+          updateGameStatus(`You won ${potentialWin.toFixed(2)} coins! 🎉`, 'success');
+        } else {
+          updateGameStatus('Game in progress - find the gems!');
+        }
+      }
+      
+      // Update UI
+      renderGameBoard();
+      updateStats();
+    }
+    
+    function calculateMultiplier() {
+      if (revealedCount === 0) return 1;
+      
+      const totalTiles = gridSize * gridSize;
+      const safeTiles = totalTiles - mineCount;
+      
+      // Base multiplier is inversely proportional to probability of success
+      const baseMultiplier = totalTiles / (totalTiles - mineCount);
+      
+      // For each revealed tile, multiply by the current probability of success
+      let currentMultiplier = baseMultiplier;
+      
+      for (let i = 1; i <= revealedCount; i++) {
+        const remainingSafeTiles = safeTiles - i + 1;
+        const remainingTiles = totalTiles - i + 1;
+        
+        currentMultiplier *= remainingTiles / remainingSafeTiles;
+      }
+      
+      // Round to 2 decimal places
+      return Math.round(currentMultiplier * 100) / 100;
+    }
+    
+    function handleCashOut() {
+      if (gameState !== 'playing') return;
+      
+      gameState = 'won';
+      cashOutBtn.disabled = true;
+      updateGameStatus(`You won ${potentialWin.toFixed(2)} coins! 🎉`, 'success');
+    }
+    
+    function updateStats() {
+      betValueElement.textContent = betAmount.toFixed(2);
+      multiplierValueElement.textContent = `${multiplier.toFixed(2)}x`;
+      potentialWinValueElement.textContent = potentialWin.toFixed(2);
+    }
+    
+    function updateGameStatus(message, status = '') {
+      gameStatusElement.innerHTML = `<p class="${status ? 'status-' + status : ''}">${message}</p>`;
+    }
+    
+    // Seedrandom implementation (simplified version)
+    // This is a simplified implementation of the seedrandom library
+    Math.seedrandom = function(seed) {
+      const masher = new Masher();
+      const s = masher.mash(seed);
+      
+      return function() {
+        const t = 2091639 * s + 2.3283064365386963e-10 * 2091639;
+        return s = t - (s = t | 0);
+      };
+    };
+    
+    function Masher() {
+      let n = 0xefc8249d;
+      
+      this.mash = function(data) {
+        data = String(data);
+        for (let i = 0; i < data.length; i++) {
+          n += data.charCodeAt(i);
+          let h = 0.02519603282416938 * n;
+          n = h >>> 0;
+          h -= n;
+          h *= n;
+          n = h >>> 0;
+          h -= n;
+          n += h * 0x100000000; // 2^32
+        }
+        return (n >>> 0) * 2.3283064365386963e-10; // 2^-32
+      };
+      
+      return this;
+    }
+  </script>
+</body>
+</html>

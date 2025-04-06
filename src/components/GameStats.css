@@ -1,0 +1,105 @@
+/* GameStats.css - Game statistics styles */
+.game-stats {
+    grid-area: stats;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    padding: 15px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
+  }
+  
+  .stats-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 15px;
+  }
+  
+  .stat-box {
+    flex: 1;
+    background-color: white;
+    padding: 15px;
+    border-radius: 6px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    transition: transform 0.2s ease;
+  }
+  
+  .stat-box:hover {
+    transform: translateY(-2px);
+  }
+  
+  .stat-label {
+    font-size: 0.9rem;
+    font-weight: bold;
+    color: #6c757d;
+    margin-bottom: 5px;
+  }
+  
+  .stat-value {
+    font-size: 1.6rem;
+    font-weight: bold;
+    color: #2c3e50;
+  }
+  
+  .multiplier {
+    color: #3498db;
+  }
+  
+  .potential-win {
+    color: #2ecc71;
+  }
+  
+  .game-status {
+    margin: 10px 0;
+    padding: 15px;
+    border-radius: 6px;
+    background-color: white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  }
+  
+  .game-status p {
+    margin: 0;
+    font-size: 1.1rem;
+  }
+  
+  .status-success {
+    color: #2ecc71;
+    font-weight: bold;
+  }
+  
+  .status-failure {
+    color: #e74c3c;
+    font-weight: bold;
+  }
+  
+  .provably-fair {
+    margin-top: 10px;
+    font-size: 0.9rem;
+  }
+  
+  .provably-fair summary {
+    cursor: pointer;
+    color: #3498db;
+    font-weight: bold;
+    outline: none;
+  }
+  
+  .fair-details {
+    margin-top: 10px;
+    padding: 10px;
+    background-color: #f1f3f5;
+    border-radius: 4px;
+    text-align: left;
+  }
+  
+  .fair-details code {
+    display: block;
+    overflow-x: auto;
+    background-color: #2c3e50;
+    color: white;
+    padding: 8px;
+    border-radius: 4px;
+    margin: 8px 0;
+    font-family: monospace;
+  }
