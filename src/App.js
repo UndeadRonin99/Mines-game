@@ -16,7 +16,7 @@ const BDAG_CHAIN_NAME = 'BlockDAG Testnet';
 const BDAG_CURRENCY_SYMBOL = 'BDAG';
 const BDAG_BLOCK_EXPLORER = 'https://primordial.bdagscan.com';
 
-// Simple function to generate a random string for provably fair seeding
+// Generates a random hash for provably fair seeding
 function generateGameHash() {
   return (
     Math.random().toString(36).substring(2, 15) +
@@ -25,27 +25,30 @@ function generateGameHash() {
 }
 
 function App() {
-  // Mines game states
   const [gridSize, setGridSize] = useState(5);
   const [mineCount, setMineCount] = useState(3);
   const [gameBoard, setGameBoard] = useState(null);
-  const [gameState, setGameState] = useState('waiting'); // 'waiting', 'playing', 'won', 'lost'
+
+  // 'waiting', 'playing', 'won', 'lost'
+  const [gameState, setGameState] = useState('waiting');
+
   const [revealedCount, setRevealedCount] = useState(0);
   const [multiplier, setMultiplier] = useState(1);
   const [betAmount, setBetAmount] = useState(1);
   const [potentialWin, setPotentialWin] = useState(0);
   const [gameHash, setGameHash] = useState('');
 
+  // Player's wallet
   const [playerAddress, setPlayerAddress] = useState(null);
   const [betInProgress, setBetInProgress] = useState(false);
 
-  // Create a signer for the "house" using the private key
+  // Create house signer
   function getHouseSigner() {
     const provider = new ethers.providers.JsonRpcProvider(BDAG_RPC_URL);
     return new ethers.Wallet(HOUSE_PRIVATE_KEY, provider);
   }
 
-  // Optionally prompt user to add BDAG network to MetaMask
+  // Optionally add BDAG network to MetaMask
   async function addBlockDAGNetwork() {
     if (!window.ethereum) return;
     try {
@@ -69,26 +72,26 @@ function App() {
     }
   }
 
-  // Generate a new board, reset everything to "waiting"
-  function startNewGame() {
+  // #### Updated: Accept an initialState param (default 'waiting')
+  function startNewGame(initialState = 'waiting') {
     const newHash = generateGameHash();
     const newBoard = generateGameBoard(gridSize, mineCount, newHash);
 
     setGameBoard(newBoard);
-    setGameState('waiting');
+    setGameState(initialState); // use the param here
     setRevealedCount(0);
     setMultiplier(1);
     setPotentialWin(betAmount);
     setGameHash(newHash);
   }
 
-  // Called on mount or whenever gridSize/mineCount changes -> sets up a board
+  // Generate a board on mount or when gridSize / mineCount changes
   useEffect(() => {
-    startNewGame();
+    startNewGame('waiting');
     // eslint-disable-next-line
   }, [gridSize, mineCount]);
 
-  // Place bet from player's wallet -> house
+  // placeBet => user => house
   async function placeBet() {
     if (!playerAddress) {
       alert('Please connect your wallet first!');
@@ -124,26 +127,25 @@ function App() {
     }
   }
 
-  // "Buy In & Start Round"
+  // "Buy In & Start Round" => place bet, then set board to "playing"
   async function handleBuyInAndStart() {
     const success = await placeBet();
     if (success) {
-      // If bet tx confirmed, set "playing" and set up a new board
-      setGameState('playing');
-      startNewGame();
+      // No need to setGameState('playing') by itself
+      // We'll do it in startNewGame
+      startNewGame('playing'); 
     }
   }
 
-  // "New Game (No Bet)" => just reset to waiting with a fresh board
+  // "New Game (No Bet)" => use 'waiting' state
   function handleNewGameNoBet() {
-    startNewGame();
+    startNewGame('waiting');
   }
 
-  // Reveal tile logic
+  // Reveal tile
   function handleTileClick(rowIndex, colIndex) {
     if (gameState === 'lost' || gameState === 'won') return;
 
-    // If user hasn't placed bet
     if (gameState === 'waiting') {
       alert('You must “Buy In & Start Round” first to place your bet and begin!');
       return;
@@ -152,7 +154,6 @@ function App() {
     const { newBoard, tileValue } = revealTile(gameBoard, rowIndex, colIndex);
 
     if (tileValue === 'mine') {
-      // Player loses
       setGameState('lost');
       // Reveal all mines
       const fullyRevealedBoard = newBoard.map(row =>
@@ -162,9 +163,7 @@ function App() {
         }))
       );
       setGameBoard(fullyRevealedBoard);
-
     } else {
-      // Safe tile
       setGameBoard(newBoard);
       setRevealedCount(prev => prev + 1);
 
@@ -243,16 +242,16 @@ function App() {
     setGridSize(size);
   }
 
-  // Show a little UI note if user can or cannot click
+  // UI note
   let canPlayMsg = null;
   if (gameState === 'playing') {
-    canPlayMsg = <p style={{ color: 'green' }}>You can now click on the board to reveal tiles!</p>;
+    canPlayMsg = <p style={{ color: 'green' }}>You can click tiles now!</p>;
   } else if (gameState === 'waiting') {
-    canPlayMsg = <p style={{ color: 'blue' }}>Please Buy In & Start Round to begin playing.</p>;
+    canPlayMsg = <p style={{ color: 'blue' }}>Buy In & Start Round to begin playing.</p>;
   } else if (gameState === 'won') {
-    canPlayMsg = <p style={{ color: 'purple' }}>You won! Try a new game or place another bet.</p>;
+    canPlayMsg = <p style={{ color: 'purple' }}>You won! Start a new game or place another bet.</p>;
   } else if (gameState === 'lost') {
-    canPlayMsg = <p style={{ color: 'red' }}>You lost. The house keeps your bet. Start a new game!</p>;
+    canPlayMsg = <p style={{ color: 'red' }}>You lost. The house keeps your bet. Try "New Game"!</p>;
   }
 
   return (
@@ -266,7 +265,6 @@ function App() {
         )}
       </header>
 
-      {/* Show the status message about whether user can click or not */}
       <div style={{ textAlign: 'center', marginTop: '10px' }}>
         {canPlayMsg}
       </div>
@@ -303,10 +301,9 @@ function App() {
 
       <footer style={{ marginTop: '20px' }}>
         <p>Provably Fair Hash: {gameHash}</p>
-        {/* Remove or comment out the warning if you don't want it */}
         <p style={{ color: 'red' }}>
-          WARNING: Hard-coded house private key. For real usage, 
-          use a contract or secure server to manage house funds.
+          WARNING: Hard-coded house private key. 
+          For real usage, use a contract or secure server to manage house funds.
         </p>
       </footer>
     </div>
