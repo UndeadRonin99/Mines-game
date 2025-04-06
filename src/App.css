@@ -62,3 +62,30 @@
   footer p {
     margin: 5px 0;
   }
+  .notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 15px 25px;
+    border-radius: 4px;
+    font-size: 16px;
+    z-index: 1000;
+    box-shadow: 0px 0px 10px rgba(0,0,0,0.1);
+    transition: opacity 0.5s ease;
+  }
+  
+  .notification-info {
+    border-left: 5px solid blue;
+    background-color: #e7f0fd;
+  }
+  
+  .notification-success {
+    border-left: 5px solid green;
+    background-color: #e8f8e9;
+  }
+  
+  .notification-error {
+    border-left: 5px solid red;
+    background-color: #fdecea;
+  }
+  

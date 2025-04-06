@@ -4,16 +4,16 @@ import './GameStats.css';
 function GameStats({
   gameState,
   multiplier,
-  betAmount,
-  potentialWin,
+  entryFee,
+  potentialReward,
   gameHash
 }) {
   return (
     <div className="game-stats">
       <div className="stats-row">
         <div className="stat-box">
-          <div className="stat-label">Bet Amount</div>
-          <div className="stat-value">{betAmount.toFixed(2)}</div>
+          <div className="stat-label">Entry Fee</div>
+          <div className="stat-value">{entryFee.toFixed(2)}</div>
         </div>
 
         <div className="stat-box">
@@ -22,17 +22,17 @@ function GameStats({
         </div>
 
         <div className="stat-box">
-          <div className="stat-label">Potential Win</div>
-          <div className="stat-value potential-win">{potentialWin.toFixed(2)}</div>
+          <div className="stat-label">Potential Reward</div>
+          <div className="stat-value potential-win">{potentialReward.toFixed(2)}</div>
         </div>
       </div>
 
       <div className="game-status">
-        {gameState === 'waiting' && <p>Select your bet and click a tile to start</p>}
+        {gameState === 'waiting' && <p>Select your entry fee and click a tile to start</p>}
         {gameState === 'playing' && <p>Game in progress - find the gems!</p>}
         {gameState === 'won' && (
           <p className="status-success">
-            You won {potentialWin.toFixed(2)} coins! 🎉
+            You won {potentialReward.toFixed(2)} coins! 🎉
           </p>
         )}
         {gameState === 'lost' && (

@@ -6,8 +6,8 @@ function GameControls({
   onBuyInAndStart,
   onNewGameNoBet,
   onCashOut,
-  betAmount,
-  onBetChange,
+  entryFee,
+  onEntryFeeChange,
   mineCount,
   onDifficultyChange,
   gridSize,
@@ -55,14 +55,14 @@ function GameControls({
         </div>
 
         <div className="control-group">
-          <label htmlFor="bet-amount">Bet Amount (BDAG):</label>
+          <label htmlFor="entry-fee">Entry Fee (BDAG):</label>
           <input
             type="number"
-            id="bet-amount"
+            id="entry-fee"
             min="0.1"
             step="0.1"
-            value={betAmount}
-            onChange={(e) => onBetChange(Number(e.target.value))}
+            value={entryFee}
+            onChange={(e) => onEntryFeeChange(Number(e.target.value))}
             disabled={gameState === 'playing'}
           />
         </div>
@@ -72,9 +72,9 @@ function GameControls({
         <button
           className="btn new-game"
           onClick={onBuyInAndStart}
-          disabled={betAmount <= 0 || gameState === 'playing'}
+          disabled={entryFee <= 0 || gameState === 'playing'}
         >
-          Buy In & Start Round
+          Enter & Start Round
         </button>
 
         <button
@@ -82,15 +82,15 @@ function GameControls({
           onClick={onNewGameNoBet}
           disabled={gameState === 'playing'}
         >
-          New Game (No Bet)
+          New Game (No Entry)
         </button>
 
         <button
           className="btn cash-out"
           onClick={onCashOut}
-          disabled={gameState !== 'playing' || betAmount <= 0}
+          disabled={gameState !== 'playing' || entryFee <= 0}
         >
-          Cash Out
+          Collect Reward
         </button>
       </div>
 

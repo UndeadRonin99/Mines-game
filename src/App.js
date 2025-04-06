@@ -24,23 +24,31 @@ function generateGameHash() {
   );
 }
 
+const Notification = ({ message, type }) => {
+  if (!message) return null;
+  return (
+    <div className={`notification notification-${type}`}>
+      {message}
+    </div>
+  );
+};
+
 function App() {
   const [gridSize, setGridSize] = useState(5);
   const [mineCount, setMineCount] = useState(3);
   const [gameBoard, setGameBoard] = useState(null);
-
   // 'waiting', 'playing', 'won', 'lost'
   const [gameState, setGameState] = useState('waiting');
-
   const [revealedCount, setRevealedCount] = useState(0);
   const [multiplier, setMultiplier] = useState(1);
-  const [betAmount, setBetAmount] = useState(1);
-  const [potentialWin, setPotentialWin] = useState(0);
+  const [entryFee, setEntryFee] = useState(1);
+  const [potentialReward, setPotentialReward] = useState(0);
   const [gameHash, setGameHash] = useState('');
-
   // Player's wallet
   const [playerAddress, setPlayerAddress] = useState(null);
-  const [betInProgress, setBetInProgress] = useState(false);
+  const [actionInProgress, setActionInProgress] = useState(false);
+  // Notification state
+  const [notification, setNotification] = useState(null);
 
   // Create house signer
   function getHouseSigner() {
@@ -72,16 +80,21 @@ function App() {
     }
   }
 
-  // #### Updated: Accept an initialState param (default 'waiting')
+  // Helper to show notifications
+  const showNotification = (message, type = 'info') => {
+    setNotification({ message, type });
+    setTimeout(() => setNotification(null), 3000);
+  };
+
+  // Accept an initialState param (default 'waiting')
   function startNewGame(initialState = 'waiting') {
     const newHash = generateGameHash();
     const newBoard = generateGameBoard(gridSize, mineCount, newHash);
-
     setGameBoard(newBoard);
-    setGameState(initialState); // use the param here
+    setGameState(initialState);
     setRevealedCount(0);
     setMultiplier(1);
-    setPotentialWin(betAmount);
+    setPotentialReward(entryFee);
     setGameHash(newHash);
   }
 
@@ -91,63 +104,59 @@ function App() {
     // eslint-disable-next-line
   }, [gridSize, mineCount]);
 
-  // placeBet => user => house
-  async function placeBet() {
+  // Send entry fee from user to house
+  async function sendEntryFee() {
     if (!playerAddress) {
-      alert('Please connect your wallet first!');
+      showNotification('Please connect your wallet first!', 'error');
       return false;
     }
-    if (betAmount <= 0) {
-      alert('Bet must be > 0');
+    if (entryFee <= 0) {
+      showNotification('Entry fee must be > 0', 'error');
       return false;
     }
     try {
-      setBetInProgress(true);
+      setActionInProgress(true);
       const provider = new ethers.providers.Web3Provider(window.ethereum);
       const signer = provider.getSigner();
 
       const houseAddress = '0x32942276BC049530CD63EB23B3776DCd2317bAE7';
       const tx = {
         to: houseAddress,
-        value: ethers.utils.parseEther(betAmount.toString()),
+        value: ethers.utils.parseEther(entryFee.toString()),
       };
 
       const txResp = await signer.sendTransaction(tx);
-      console.log('Bet TX:', txResp);
-
+      console.log('Entry TX:', txResp);
       await txResp.wait();
-      alert(`Bet of ${betAmount} BDAG sent to the house!`);
+      showNotification(`Entry fee of ${entryFee} BDAG sent to the game!`, 'success');
       return true;
     } catch (err) {
-      console.error('Error placing bet:', err);
-      alert(`Error placing bet: ${err.message}`);
+      console.error('Error sending entry fee:', err);
+      showNotification(`Error sending entry fee: ${err.message}`, 'error');
       return false;
     } finally {
-      setBetInProgress(false);
+      setActionInProgress(false);
     }
   }
 
-  // "Buy In & Start Round" => place bet, then set board to "playing"
-  async function handleBuyInAndStart() {
-    const success = await placeBet();
+  // "Enter & Start Round" => send entry fee, then set board to "playing"
+  async function handleEnterAndStart() {
+    const success = await sendEntryFee();
     if (success) {
-      // No need to setGameState('playing') by itself
-      // We'll do it in startNewGame
       startNewGame('playing'); 
     }
   }
 
-  // "New Game (No Bet)" => use 'waiting' state
-  function handleNewGameNoBet() {
+  // "New Game (No Entry)" => use 'waiting' state
+  function handleNewGameNoEntry() {
     startNewGame('waiting');
   }
 
   // Reveal tile
   function handleTileClick(rowIndex, colIndex) {
     if (gameState === 'lost' || gameState === 'won') return;
-
     if (gameState === 'waiting') {
-      alert('You must “Buy In & Start Round” first to place your bet and begin!');
+      showNotification('You must “Enter & Start Round” first to send your entry fee and begin!', 'info');
       return;
     }
 
@@ -170,7 +179,7 @@ function App() {
       const newCount = revealedCount + 1;
       const newMult = calculateMultiplier(newCount, mineCount, gridSize);
       setMultiplier(newMult);
-      setPotentialWin(betAmount * newMult);
+      setPotentialReward(entryFee * newMult);
 
       const totalTiles = gridSize * gridSize;
       const safeTiles = totalTiles - mineCount;
@@ -181,16 +190,16 @@ function App() {
     }
   }
 
-  // "Cash Out"
-  function handleCashOut() {
+  // "Collect Reward"
+  function handleCollectReward() {
     if (gameState === 'playing') {
       setGameState('won');
-      alert(`You won ${potentialWin.toFixed(2)} BDAG!`);
+      showNotification(`You won ${potentialReward.toFixed(2)} BDAG!`, 'success');
       payWinningsToPlayer();
     }
   }
 
-  // House => pay the player from private key
+  // House pays the player from private key
   async function payWinningsToPlayer() {
     if (!playerAddress) {
       console.error('No player address found!');
@@ -200,40 +209,39 @@ function App() {
       const houseSigner = getHouseSigner();
       const tx = {
         to: playerAddress,
-        value: ethers.utils.parseEther(potentialWin.toString()),
+        value: ethers.utils.parseEther(potentialReward.toString()),
       };
 
       const txResp = await houseSigner.sendTransaction(tx);
-      console.log('House paying TX:', txResp);
-
+      console.log('Game paying TX:', txResp);
       await txResp.wait();
-      alert(`House paid ${potentialWin} BDAG to you!`);
+      showNotification(`Game paid ${potentialReward} BDAG to you!`, 'success');
     } catch (err) {
-      console.error('Error paying winnings:', err);
-      alert(`Error paying winnings: ${err.message}`);
+      console.error('Error paying reward:', err);
+      showNotification(`Error paying reward: ${err.message}`, 'error');
     }
   }
 
   // Connect player's MetaMask
   async function connectWallet() {
     if (!window.ethereum) {
-      alert('MetaMask not detected!');
+      showNotification('MetaMask not detected!', 'error');
       return;
     }
     await addBlockDAGNetwork();
     try {
       const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
       setPlayerAddress(accounts[0]);
-      console.log('Player connected:', accounts[0]);
+      console.log('Wallet connected');
     } catch (err) {
       console.error('User rejected request:', err);
     }
   }
 
-  // update bet & potential
-  function handleBetChange(amt) {
-    setBetAmount(amt);
-    setPotentialWin(amt * multiplier);
+  // update entry fee & potential reward
+  function handleEntryFeeChange(amt) {
+    setEntryFee(amt);
+    setPotentialReward(amt * multiplier);
   }
   function handleDifficultyChange(mines) {
     setMineCount(mines);
@@ -247,19 +255,23 @@ function App() {
   if (gameState === 'playing') {
     canPlayMsg = <p style={{ color: 'green' }}>You can click tiles now!</p>;
   } else if (gameState === 'waiting') {
-    canPlayMsg = <p style={{ color: 'blue' }}>Buy In & Start Round to begin playing.</p>;
+    canPlayMsg = <p style={{ color: 'blue' }}>Enter & Start Round to begin playing.</p>;
   } else if (gameState === 'won') {
-    canPlayMsg = <p style={{ color: 'purple' }}>You won! Start a new game or place another bet.</p>;
+    canPlayMsg = <p style={{ color: 'purple' }}>You won! Start a new game or send another entry fee.</p>;
   } else if (gameState === 'lost') {
-    canPlayMsg = <p style={{ color: 'red' }}>You lost. The house keeps your bet. Try "New Game"!</p>;
+    canPlayMsg = <p style={{ color: 'red' }}>You lost. The Game keeps your entry fee. Try "New Game"!</p>;
   }
 
   return (
     <div className="App">
+      {/* Render Notification */}
+      {notification && (
+        <Notification message={notification.message} type={notification.type} />
+      )}
       <header className="App-header">
         <h1>Mines Game – BDAG Demo</h1>
         {playerAddress ? (
-          <p>Player Address: {playerAddress}</p>
+          <p>Wallet Connected</p>
         ) : (
           <button onClick={connectWallet}>Connect MetaMask (BDAG)</button>
         )}
@@ -274,8 +286,8 @@ function App() {
           <GameStats
             gameState={gameState}
             multiplier={multiplier}
-            betAmount={betAmount}
-            potentialWin={potentialWin}
+            entryFee={entryFee}
+            potentialReward={potentialReward}
             gameHash={gameHash}
           />
 
@@ -286,11 +298,11 @@ function App() {
 
           <GameControls
             gameState={gameState}
-            onBuyInAndStart={handleBuyInAndStart}
-            onNewGameNoBet={handleNewGameNoBet}
-            onCashOut={handleCashOut}
-            betAmount={betAmount}
-            onBetChange={handleBetChange}
+            onBuyInAndStart={handleEnterAndStart}
+            onNewGameNoBet={handleNewGameNoEntry}
+            onCashOut={handleCollectReward}
+            entryFee={entryFee}
+            onEntryFeeChange={handleEntryFeeChange}
             mineCount={mineCount}
             onDifficultyChange={handleDifficultyChange}
             gridSize={gridSize}
@@ -302,8 +314,8 @@ function App() {
       <footer style={{ marginTop: '20px' }}>
         <p>Provably Fair Hash: {gameHash}</p>
         <p style={{ color: 'red' }}>
-          WARNING: Hard-coded house private key. 
-          For real usage, use a contract or secure server to manage house funds.
+          WARNING: Hard-coded Game private key. 
+          For real usage, use a contract or secure server to manage Game funds.
         </p>
       </footer>
     </div>
